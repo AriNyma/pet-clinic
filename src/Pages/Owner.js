@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Owner = () => {
   const [pets, setPets] = useState([]);
-  const history = useHistory();
+  const history = useNavigate();
 
   useEffect(() => {
     // Fetch pets for the specific owner from the backend using the owner's token
