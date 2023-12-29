@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Owner = () => {
   const [pets, setPets] = useState([]);
   const history = useNavigate();
 
   useEffect(() => {
-    // Fetch pets for the specific owner from the backend using the owner's token
     const accessToken = localStorage.getItem('accessToken');
-    axios.get('/pets', { headers: { Authorization: `Bearer ${accessToken}` } })
+    axios.get('http://localhost:4000/pets', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
       .then((response) => setPets(response.data))
       .catch((error) => console.error(error));
   }, []);
 
   const handleViewDetails = (petId) => {
-    // Navigate to the detailed info page for the selected pet
-    history.push(`/owner/pet/${petId}`);
+    history(`/owner/pet/${petId}`);
   };
 
   return (

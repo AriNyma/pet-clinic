@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -7,16 +8,18 @@ const Login = () => {
   const history = useNavigate();
 
   const handleLogin = async () => {
-    // Implement API call to POST /login with email and password
-    // Set the appropriate access token based on the user role
-    // For simplicity, I'm using hardcoded tokens here
-    const accessToken = 'doctor-access-token'; // or 'owner-access-token'
-    
-    // Store the token in localStorage or a secure way
-    localStorage.setItem('accessToken', accessToken);
-    
-    // Redirect to the appropriate role-based page
-    history.push(accessToken.includes('doctor') ? '/doctor' : '/owner');
+    try {
+      const response = await axios.post('http://localhost:4000/login', {
+        email,
+        password,
+      });
+      const accessToken = response.data.access_token;
+      localStorage.setItem('accessToken', accessToken);
+      history(accessToken.includes('doctor') ? '/doctor' : '/owner');
+    } catch (error) {
+      console.error(error);
+      // Handle login failure
+    }
   };
 
   return (

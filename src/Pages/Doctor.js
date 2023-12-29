@@ -5,9 +5,10 @@ const Doctor = () => {
   const [pets, setPets] = useState([]);
 
   useEffect(() => {
-    // Fetch pets from the backend using the doctor's token
     const accessToken = localStorage.getItem('accessToken');
-    axios.get('/pets', { headers: { Authorization: `Bearer ${accessToken}` } })
+    axios.get('http://localhost:4000/pets', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
       .then((response) => setPets(response.data))
       .catch((error) => console.error(error));
   }, []);
