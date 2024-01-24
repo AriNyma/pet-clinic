@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import showNotification from '../Components/ShowNotification';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,10 +16,22 @@ const Login = () => {
       });
       const accessToken = response.data.access_token;
       localStorage.setItem('accessToken', accessToken);
-      history(accessToken.includes('doctor') ? '/doctor' : '/owner');
+  
+      // Check if the email address belongs to a doctor or an owner
+      const userType = email.endsWith('@pets.com') ? 'doctor' : 'owner';
+  
+      // Redirect to the appropriate page based on the user type
+      history(`/${userType}`);
     } catch (error) {
       console.error(error);
-      // Handle login failure
+      
+      // Check if the error is due to invalid email or password
+      if (error.response && error.response.status === 401) {
+        showNotification('Error', 'Invalid email or password', 'error');
+      } else {
+        // Handle other errors
+        showNotification('Error', 'An unexpected error occurred', 'error');
+      }
     }
   };
 
