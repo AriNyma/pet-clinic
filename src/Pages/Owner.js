@@ -16,7 +16,7 @@ const Owner = () => {
   }, []);
 
   const handleViewDetails = (petId) => {
-    history(`/owner/pet/${petId}`);
+    history(`/pet`);
   };
 
   return (
@@ -25,7 +25,7 @@ const Owner = () => {
       <ul>
         {pets.map((pet) => (
           <li key={pet.id}>
-            {pet.name} - {pet.type} - Last Visit: {pet.lastVisit}{' '}
+            {pet.name} - {pet.type}
             <button onClick={() => handleViewDetails(pet.id)}>View Details</button>
           </li>
         ))}

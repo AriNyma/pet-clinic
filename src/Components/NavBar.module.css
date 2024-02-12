@@ -12,6 +12,7 @@
     font-size: 2rem;
     color: white;
     font-weight: bold;
+    background-image: "../assets/images/logo.png";
   }
   
   .header ul {

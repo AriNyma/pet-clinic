@@ -2,17 +2,6 @@ const express = require('express');
 var cors = require('cors');
 const app = express();
 
-
-class Reservation {
-    constructor(id, petId, dateTime, durationMins, comment) {
-        this.id = id;
-        this.petId = petId;
-        this.dateTime = dateTime;
-        this.durationMins = durationMins;
-        this.comment = comment;
-    }
-}
-
 // Parse JSON bodies for this app. Make sure you put
 // `app.use(express.json())` **before** your route handlers!
 
@@ -39,9 +28,17 @@ var visits = require('./visits');
 var getVisits = require('./getVisits');
 var postVisits = require('./postVisits');
 
+var users = require('./users');
+var getUsers = require('./getUsers');
+
 
 app.post('/login', cors(corsOptions), (req, res) => {
     login(req, res);
+});
+
+// GET /users
+app.get('/users', cors(corsOptions), (req, res) => {
+    getUsers(req, res, checkAuthHeader, users);
 });
 
 // GET /pets
