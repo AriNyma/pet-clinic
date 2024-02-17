@@ -16,7 +16,7 @@ function Layout(props){
             <Route path="/doctor" element={<Doctor />} />
             <Route path="/owner" element={<Owner />} />
             <Route path="/visits" element={<Visits />} />
-            <Route path="/pet" element={<PetDetails />} />
+            <Route path="/pet/:petId" element={<PetDetails />} />
         </Routes>
     </div>
     )

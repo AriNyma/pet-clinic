@@ -1,4 +1,3 @@
-
 import { toast } from 'react-toastify';
 
 const showNotification = ({ message, type }) => {
@@ -6,7 +5,7 @@ const showNotification = ({ message, type }) => {
     switch (type) {
       case 'success':
         return {
-          position: toast.POSITION.TOP_RIGHT,
+          position: 'top-right',
           autoClose: 3000,
           hideProgressBar: true,
           closeOnClick: true,
@@ -17,7 +16,7 @@ const showNotification = ({ message, type }) => {
         };
       case 'error':
         return {
-          position: toast.POSITION.TOP_RIGHT,
+          position: 'top-right',
           autoClose: 3000,
           hideProgressBar: true,
           closeOnClick: true,
@@ -28,7 +27,7 @@ const showNotification = ({ message, type }) => {
         };
       case 'warning':
         return {
-          position: toast.POSITION.TOP_RIGHT,
+          position: 'top-right',
           autoClose: 3000,
           hideProgressBar: true,
           closeOnClick: true,
@@ -39,7 +38,7 @@ const showNotification = ({ message, type }) => {
         };
       default:
         return {
-          position: toast.POSITION.TOP_RIGHT,
+          position: 'top-right',
           autoClose: 3000,
           hideProgressBar: true,
           closeOnClick: true,

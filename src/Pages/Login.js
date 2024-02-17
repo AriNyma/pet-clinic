@@ -17,8 +17,8 @@ const Login = () => {
       const accessToken = response.data.access_token;
       localStorage.setItem('accessToken', accessToken);
   
-      // Check if the email address belongs to a doctor or an owner
-      const userType = email.endsWith('@pets.com') ? 'doctor' : 'owner';
+      // Check if the id belongs to a doctor or an owner
+      const userType = response.data.id === 0 ? 'doctor' : 'owner';
   
       // Redirect to the appropriate page based on the user type
       history(`/${userType}`);

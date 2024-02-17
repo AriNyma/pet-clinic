@@ -1,31 +1,34 @@
-
-import { Link } from 'react-router-dom';
-import classes from './NavBar.module.css';
 import { useNavigate } from 'react-router-dom';
+import classes from './NavBar.module.css';
 
-
-function NavBar(){
-    const history = useNavigate();
+function NavBar() {
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken'); // Clear access token
-        history('/'); // Navigate back to front page
-      };
+        navigate('/'); // Navigate back to front page
+    };
+
+    const handleBookings = () => {
+        navigate('/visits'); // Navigate to the 'visits' page
+    };
 
     return (
         <header className={classes.header}>
             <div className={classes.logo}>PET Clinic</div>
             <nav>
-            <ul>
+                <ul>
                     <li>
-                        <Link onClick={handleLogout}>Logout</Link>
+                        <button onClick={handleLogout}>Home/Logout</button>
                     </li>
                     <li>
-                        <Link to='/visits'>Bookings</Link>
+                        <button onClick={handleBookings}>Bookings</button>
                     </li>
                 </ul>
             </nav>
         </header>
-    )
+    );
 }
+
 export default NavBar;
+
