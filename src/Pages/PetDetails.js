@@ -8,34 +8,51 @@ const PetDetails = () => {
   const [newVisitDate, setNewVisitDate] = useState('');
   const [newVisitComment, setNewVisitComment] = useState('');
   const [doctorComment, setDoctorComment] = useState('');
+  const [isDoctor, setIsDoctor] = useState(false);
 
   const fetchPetDetails = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtain authentication token from local storage
+      const accessToken = localStorage.getItem('accessToken');
       const response = await axios.get(`http://localhost:4000/pets/${petId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` } // Include token in request headers
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
       setPet(response.data);
+      //Check if this can be done another way
+      setIsDoctor(accessToken === "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6ImRvY3RvciIsImlhdCI6MTUxNjIzOTAyMn0.0_MKcjJoHX-Vsjb4vVlWZLZMY-45nMQ22MTXUCAQgng");
     } catch (error) {
       console.error('Error fetching pet details:', error);
     }
   };
 
   useEffect(() => {
-    fetchPetDetails(); // Call fetchPetDetails when the component mounts or when petId changes
+    fetchPetDetails();
   }, [petId]);
+
+  const upcomingVisits = pet && pet.visits ? pet.visits.filter(visit => new Date(visit.date) > new Date()) : [];
 
   const handleAddVisit = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtain authentication token from local storage
+      if (!newVisitDate || !newVisitComment) {
+        console.error('Please provide both visit date and comment.');
+        return;
+      }
+      const visitDate = new Date(newVisitDate);
+      const today = new Date();
+      if (visitDate <= today) {
+        console.error('Visit date must be in the future.');
+        return;
+      }
+      const accessToken = localStorage.getItem('accessToken');
       await axios.post(`http://localhost:4000/visits`, {
         petId,
         date: newVisitDate,
         comment: newVisitComment,
       }, {
-        headers: { Authorization: `Bearer ${accessToken}` } // Include token in request headers
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
-      fetchPetDetails(); // Refresh pet details after adding a visit
+      fetchPetDetails();
+      setNewVisitDate('');
+      setNewVisitComment('');
     } catch (error) {
       console.error('Error adding visit:', error);
     }
@@ -43,11 +60,11 @@ const PetDetails = () => {
 
   const handleStatusChange = async (newStatus) => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtain authentication token from local storage
+      const accessToken = localStorage.getItem('accessToken');
       await axios.put(`http://localhost:4000/pets/${petId}`, { status: newStatus }, {
-        headers: { Authorization: `Bearer ${accessToken}` } // Include token in request headers
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
-      fetchPetDetails(); // Refresh pet details after changing status
+      fetchPetDetails();
     } catch (error) {
       console.error('Error changing pet status:', error);
     }
@@ -55,18 +72,18 @@ const PetDetails = () => {
 
   const handleDoctorCommentEdit = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtain authentication token from local storage
+      const accessToken = localStorage.getItem('accessToken');
       await axios.put(`http://localhost:4000/pets/${petId}`, { doctorComment }, {
-        headers: { Authorization: `Bearer ${accessToken}` } // Include token in request headers
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
-      fetchPetDetails(); // Refresh pet details after editing doctor's comment
+      fetchPetDetails();
     } catch (error) {
       console.error('Error editing doctor comment:', error);
     }
   };
 
   if (!pet) {
-    return <div>Loading...</div>;
+    return <div>Pet not found...</div>;
   }
 
   return (
@@ -75,29 +92,22 @@ const PetDetails = () => {
       <p>Name: {pet.name}</p>
       <p>Type: {pet.type}</p>
       <p>Status: {pet.status}</p>
-      {/* Display owner information if applicable */}
-      {pet.owner && (
-        <div>
-          <h3>Owner Details</h3>
-          <p>Name: {pet.owner.name}</p>
-          <p>Email: {pet.owner.email}</p>
-          {/* Display more owner information as needed */}
-        </div>
-      )}
-      <h3>Visits</h3>
+      <h3>Upcoming Visits</h3>
       <ul>
-        {pet.visits && pet.visits.map((visit) => (
+        {upcomingVisits.map((visit) => (
           <li key={visit.id}>
             <p>Date: {visit.date}</p>
             <p>Comment: {visit.comment}</p>
           </li>
         ))}
       </ul>
-      {/* Display doctor's only comment */}
-      <h3>Doctor's Comment</h3>
-      <textarea value={doctorComment} onChange={(e) => setDoctorComment(e.target.value)} />
-      <button onClick={handleDoctorCommentEdit}>Save Doctor's Comment</button>
-      {/* Form to add a new visit */}
+      {isDoctor && (
+        <div>
+          <h3>Doctor's Comment</h3>
+          <textarea value={doctorComment} onChange={(e) => setDoctorComment(e.target.value)} />
+          <button onClick={handleDoctorCommentEdit}>Save Doctor's Comment</button>
+        </div>
+      )}
       <h3>Add New Visit</h3>
       <label>
         Date:
@@ -108,7 +118,6 @@ const PetDetails = () => {
         <textarea value={newVisitComment} onChange={(e) => setNewVisitComment(e.target.value)} />
       </label>
       <button onClick={handleAddVisit}>Add Visit</button>
-      {/* Button to change pet status */}
       <h3>Change Status</h3>
       <button onClick={() => handleStatusChange('alive')}>Alive</button>
       <button onClick={() => handleStatusChange('deceased')}>Deceased</button>
