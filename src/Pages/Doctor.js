@@ -58,16 +58,16 @@ const Doctor = () => {
                     const lastVisitDate = petVisits.length > 0 ? petVisits[petVisits.length - 1].date : 'No visits';
                     return (
                         <li key={pet.id}>
-                            {pet.name}
+                            <strong>{pet.name}</strong>
                             <button onClick={() => handleViewDetails(pet.id)}>
                                 {detailsVisible[pet.id] ? 'Hide Details' : 'View Details'}
                             </button>
                             <Link to={`/pet/${pet.id}`}><button>More Details</button></Link>
                             {detailsVisible[pet.id] && (
                                 <ul>
-                                    <li>{pet.petType}</li>
-                                    <li>{pet.dob}</li>
-                                    <li>{pet.status}</li>
+                                    <li>Speies: {pet.petType}</li>
+                                    <li>DoB: {pet.dob}</li>
+                                    <li>Status: {pet.status}</li>
                                     <li>Last Visit: {lastVisitDate}</li>
                                 </ul>
                             )}

@@ -9,8 +9,8 @@ function NavBar() {
         navigate('/'); // Navigate back to front page
     };
 
-    const handleBookings = () => {
-        navigate('/visits'); // Navigate to the 'visits' page
+    const handleGoBack = () => {
+        navigate(-1); // Go back to the previous page
     };
 
     return (
@@ -19,10 +19,10 @@ function NavBar() {
             <nav>
                 <ul>
                     <li>
-                        <button onClick={handleLogout}>Home/Logout</button>
+                        <button onClick={handleGoBack}>Back</button>
                     </li>
                     <li>
-                        <button onClick={handleBookings}>Bookings</button>
+                        <button onClick={handleLogout}>Logout</button> 
                     </li>
                 </ul>
             </nav>
