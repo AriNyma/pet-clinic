@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 
 const Doctor = () => {
     const [pets, setPets] = useState([]);
     const [visits, setVisits] = useState([]);
     const [showAliveOnly, setShowAliveOnly] = useState(false);
     const [detailsVisible, setDetailsVisible] = useState({}); // Track visibility of details for each pet
+    const navigate = useNavigate(); // Get the navigate function
 
     useEffect(() => {
         const accessToken = localStorage.getItem('accessToken');
@@ -45,6 +46,12 @@ const Doctor = () => {
         setShowAliveOnly(!showAliveOnly);
     };
 
+    // Function to navigate to the PetDetails page with the userType parameter
+    const handleMoreDetails = (petId) => {
+        const userType = 'doctor'; // Set the userType as doctor
+        navigate(`/pet/${petId}`, { state: { userType } }); // Pass userType as state variable
+    };
+
     return (
         <div>
             <h2>Doctor's Dashboard</h2>
@@ -62,10 +69,10 @@ const Doctor = () => {
                             <button onClick={() => handleViewDetails(pet.id)}>
                                 {detailsVisible[pet.id] ? 'Hide Details' : 'View Details'}
                             </button>
-                            <Link to={`/pet/${pet.id}`}><button>More Details</button></Link>
+                            <button onClick={() => handleMoreDetails(pet.id)}>More Details</button> {/* Use handleMoreDetails function */}
                             {detailsVisible[pet.id] && (
                                 <ul>
-                                    <li>Speies: {pet.petType}</li>
+                                    <li>Species: {pet.petType}</li>
                                     <li>DoB: {pet.dob}</li>
                                     <li>Status: {pet.status}</li>
                                     <li>Last Visit: {lastVisitDate}</li>

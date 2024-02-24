@@ -21,7 +21,7 @@ const Login = () => {
       const userType = response.data.id === 0 ? 'doctor' : 'owner';
   
       // Redirect to the appropriate page based on the user type
-      history(`/${userType}`);
+      history(`/${userType}`, { userType }); // Passing userType as a parameter
     } catch (error) {
       console.error(error);
       

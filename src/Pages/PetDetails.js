@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom'; // Import useLocation hook
 
 const PetDetails = () => {
   const { petId } = useParams(); // Get the pet ID from URL parameters
+  const location = useLocation(); // Get the location object
   const [pet, setPet] = useState(null);
   const [newVisitDate, setNewVisitDate] = useState('');
   const [newVisitComment, setNewVisitComment] = useState('');
@@ -17,8 +18,9 @@ const PetDetails = () => {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       setPet(response.data);
-      //Check if this can be done another way
-      setIsDoctor(accessToken === "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6ImRvY3RvciIsImlhdCI6MTUxNjIzOTAyMn0.0_MKcjJoHX-Vsjb4vVlWZLZMY-45nMQ22MTXUCAQgng");
+      // Check if user is a doctor based on access token or userType from location state
+      const userType = location.state ? location.state.userType : '';
+      setIsDoctor(userType === 'doctor');
     } catch (error) {
       console.error('Error fetching pet details:', error);
     }
@@ -28,35 +30,56 @@ const PetDetails = () => {
     fetchPetDetails();
   }, [petId]);
 
-  const upcomingVisits = pet && pet.visits ? pet.visits.filter(visit => new Date(visit.date) > new Date()) : [];
+  const parseDate = (dateString) => {
+    // Assume dateString is in the format "YYYY-MM-DD"
+    const [year, month, day] = dateString.split('-').map(Number);
+    // Months are zero-based in JavaScript Date objects, so we subtract 1
+    return new Date(year, month - 1, day);
+  };
+
+  const upcomingVisits = pet && pet.visits ? pet.visits.filter(visit => visit.date && parseDate(visit.date) > new Date()) : [];
+
+  // Sort visits by date in ascending order
+  upcomingVisits.sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime());
 
   const handleAddVisit = async () => {
     try {
-      if (!newVisitDate || !newVisitComment) {
-        console.error('Please provide both visit date and comment.');
-        return;
-      }
-      const visitDate = new Date(newVisitDate);
-      const today = new Date();
-      if (visitDate <= today) {
-        console.error('Visit date must be in the future.');
-        return;
-      }
-      const accessToken = localStorage.getItem('accessToken');
-      await axios.post(`http://localhost:4000/visits`, {
-        petId,
-        date: newVisitDate,
-        comment: newVisitComment,
-      }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      fetchPetDetails();
-      setNewVisitDate('');
-      setNewVisitComment('');
+        if (!newVisitDate || !newVisitComment) {
+            console.error('Please provide both visit date and comment.');
+            return;
+        }
+        
+        const visitDate = parseDate(newVisitDate);
+        const today = new Date();
+
+        if (visitDate <= today) {
+            console.error('Visit date must be in the future.');
+            return;
+        }
+
+        // Check if there is already a visit scheduled for the chosen date
+        const isVisitScheduled = pet.visits.some(visit => visit.date && parseDate(visit.date).toDateString() === visitDate.toDateString());
+
+        if (isVisitScheduled) {
+            console.error('A visit is already scheduled for the chosen date.');
+            return;
+        }
+
+        const accessToken = localStorage.getItem('accessToken');
+        await axios.post(`http://localhost:4000/visits`, {
+            petId,
+            date: newVisitDate,
+            comment: newVisitComment,
+        }, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        fetchPetDetails();
+        setNewVisitDate('');
+        setNewVisitComment('');
     } catch (error) {
-      console.error('Error adding visit:', error);
+        console.error('Error adding visit:', error);
     }
-  };
+};
 
   const handleStatusChange = async (newStatus) => {
     try {
@@ -90,8 +113,9 @@ const PetDetails = () => {
     <div>
       <h2>Pet Details</h2>
       <p>Name: {pet.name}</p>
-      <p>Type: {pet.type}</p>
+      <p>Type: {pet.petType}</p>
       <p>Status: {pet.status}</p>
+      <p>DoB: {pet.dob}</p>
       <h3>Upcoming Visits</h3>
       <ul>
         {upcomingVisits.map((visit) => (
