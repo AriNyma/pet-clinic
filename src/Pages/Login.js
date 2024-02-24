@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import showNotification from '../Components/ShowNotification';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const history = useNavigate();
+  const [errorMessage, setErrorMessage] = useState(''); // State for error message
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -20,17 +20,17 @@ const Login = () => {
       // Check if the id belongs to a doctor or an owner
       const userType = response.data.id === 0 ? 'doctor' : 'owner';
   
-      // Redirect to the appropriate page based on the user type
-      history(`/${userType}`, { userType }); // Passing userType as a parameter
+      // Redirect to the appropriate page based on the user type and passing userType as a parameter
+      navigate(`/${userType}`, { userType });
     } catch (error) {
       console.error(error);
       
       // Check if the error is due to invalid email or password
       if (error.response && error.response.status === 401) {
-        showNotification('Error', 'Invalid email or password', 'error');
+        setErrorMessage('Invalid email or password'); // Set error message
       } else {
         // Handle other errors
-        showNotification('Error', 'An unexpected error occurred', 'error');
+        setErrorMessage('An unexpected error occurred'); // Set error message
       }
     }
   };
@@ -50,6 +50,7 @@ const Login = () => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} {/* Display error message */}
       <button onClick={handleLogin}>Login</button>
     </div>
   );

@@ -1,109 +1,89 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, useLocation } from 'react-router-dom'; // Import useLocation hook
+import { useParams, useLocation } from 'react-router-dom';
 
 const PetDetails = () => {
-  const { petId } = useParams(); // Get the pet ID from URL parameters
-  const location = useLocation(); // Get the location object
+  const { petId } = useParams();
+  const location = useLocation();
   const [pet, setPet] = useState(null);
   const [newVisitDate, setNewVisitDate] = useState('');
+  const [visits, setVisits] = useState([]);
   const [newVisitComment, setNewVisitComment] = useState('');
   const [doctorComment, setDoctorComment] = useState('');
   const [isDoctor, setIsDoctor] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [petVisits, setPetVisits] = useState([]);
+  const [owner, setOwner] = useState('');
 
   const fetchPetDetails = async () => {
     try {
+      setLoading(true);
       const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.get(`http://localhost:4000/pets/${petId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      setPet(response.data);
-      // Check if user is a doctor based on access token or userType from location state
+
+      const [petResponse, usersResponse, visitsResponse] = await Promise.all([
+        axios.get(`http://localhost:4000/pets/${petId}`, { headers: { Authorization: `Bearer ${accessToken}` } }),
+        axios.get(`http://localhost:4000/users`, { headers: { Authorization: `Bearer ${accessToken}` } }),
+        axios.get('http://localhost:4000/visits', { headers: { Authorization: `Bearer ${accessToken}` } })
+      ]);
+
+      console.log('Pet Response:', petResponse.data);
+      console.log('Users Response:', usersResponse.data);
+      console.log('Visits Response:', visitsResponse.data);
+
+      const petData = petResponse.data;
+      setPet(petData);
+
+      const usersData = usersResponse.data;
+      const owner = usersData.find(user => user.id === petData.ownerId);
+      console.log('Owner:', owner);
+      setOwner(owner.name);
+
+      const allVisits = visitsResponse.data;
+      setVisits(allVisits);
+
+      const petVisits = allVisits.filter(visit => visit.petId.toString() === petId);
+      setPetVisits(petVisits.sort((a, b) => new Date(b.date) - new Date(a.date)));
+
       const userType = location.state ? location.state.userType : '';
       setIsDoctor(userType === 'doctor');
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching pet details:', error);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchPetDetails();
-  }, [petId]);
-
-  const parseDate = (dateString) => {
-    // Assume dateString is in the format "YYYY-MM-DD"
-    const [year, month, day] = dateString.split('-').map(Number);
-    // Months are zero-based in JavaScript Date objects, so we subtract 1
-    return new Date(year, month - 1, day);
-  };
-
-  const upcomingVisits = pet && pet.visits ? pet.visits.filter(visit => visit.date && parseDate(visit.date) > new Date()) : [];
-
-  // Sort visits by date in ascending order
-  upcomingVisits.sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime());
+  }, [petId, location.state]);
 
   const handleAddVisit = async () => {
     try {
-        if (!newVisitDate || !newVisitComment) {
-            console.error('Please provide both visit date and comment.');
-            return;
-        }
-        
-        const visitDate = parseDate(newVisitDate);
-        const today = new Date();
-
-        if (visitDate <= today) {
-            console.error('Visit date must be in the future.');
-            return;
-        }
-
-        // Check if there is already a visit scheduled for the chosen date
-        const isVisitScheduled = pet.visits.some(visit => visit.date && parseDate(visit.date).toDateString() === visitDate.toDateString());
-
-        if (isVisitScheduled) {
-            console.error('A visit is already scheduled for the chosen date.');
-            return;
-        }
-
-        const accessToken = localStorage.getItem('accessToken');
-        await axios.post(`http://localhost:4000/visits`, {
-            petId,
-            date: newVisitDate,
-            comment: newVisitComment,
-        }, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        fetchPetDetails();
-        setNewVisitDate('');
-        setNewVisitComment('');
+      // Add visit handling logic
     } catch (error) {
-        console.error('Error adding visit:', error);
-    }
-};
-
-  const handleStatusChange = async (newStatus) => {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      await axios.put(`http://localhost:4000/pets/${petId}`, { status: newStatus }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      fetchPetDetails();
-    } catch (error) {
-      console.error('Error changing pet status:', error);
+      console.error('Error adding visit:', error.message);
     }
   };
 
   const handleDoctorCommentEdit = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      await axios.put(`http://localhost:4000/pets/${petId}`, { doctorComment }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      fetchPetDetails();
+      // Add doctor comment edit logic
     } catch (error) {
       console.error('Error editing doctor comment:', error);
     }
   };
+
+  const handleStatusChange = async (status) => {
+    try {
+      // Add status change logic
+    } catch (error) {
+      console.error('Error changing pet status:', error);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!pet) {
     return <div>Pet not found...</div>;
@@ -116,9 +96,10 @@ const PetDetails = () => {
       <p>Type: {pet.petType}</p>
       <p>Status: {pet.status}</p>
       <p>DoB: {pet.dob}</p>
-      <h3>Upcoming Visits</h3>
+      <p>Owner: {owner}</p> {/* Display owner's name */}
+      <h3>Visits</h3>
       <ul>
-        {upcomingVisits.map((visit) => (
+        {petVisits.map(visit => (
           <li key={visit.id}>
             <p>Date: {visit.date}</p>
             <p>Comment: {visit.comment}</p>
@@ -128,18 +109,18 @@ const PetDetails = () => {
       {isDoctor && (
         <div>
           <h3>Doctor's Comment</h3>
-          <textarea value={doctorComment} onChange={(e) => setDoctorComment(e.target.value)} />
+          <textarea value={doctorComment} onChange={(e) => setDoctorComment(e.target.value)} /><br></br>
           <button onClick={handleDoctorCommentEdit}>Save Doctor's Comment</button>
         </div>
       )}
       <h3>Add New Visit</h3>
       <label>
-        Date:
+        Date:<br></br>
         <input type="date" value={newVisitDate} onChange={(e) => setNewVisitDate(e.target.value)} />
-      </label>
+      </label><br></br>
       <label>
-        Comment:
-        <textarea value={newVisitComment} onChange={(e) => setNewVisitComment(e.target.value)} />
+        Comment:<br></br>
+        <textarea value={newVisitComment} onChange={(e) => setNewVisitComment(e.target.value)} /><br></br>
       </label>
       <button onClick={handleAddVisit}>Add Visit</button>
       <h3>Change Status</h3>
