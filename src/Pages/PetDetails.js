@@ -19,39 +19,40 @@ const PetDetails = () => {
     try {
       setLoading(true);
       const accessToken = localStorage.getItem('accessToken');
-
-      const [petResponse, usersResponse, visitsResponse] = await Promise.all([
-        axios.get(`http://localhost:4000/pets/${petId}`, { headers: { Authorization: `Bearer ${accessToken}` } }),
-        axios.get(`http://localhost:4000/users`, { headers: { Authorization: `Bearer ${accessToken}` } }),
-        axios.get('http://localhost:4000/visits', { headers: { Authorization: `Bearer ${accessToken}` } })
-      ]);
-
+  
+      const petResponse = await axios.get(`http://localhost:4000/pets/${petId}`, { headers: { Authorization: `Bearer ${accessToken}` } });
       console.log('Pet Response:', petResponse.data);
-      console.log('Users Response:', usersResponse.data);
-      console.log('Visits Response:', visitsResponse.data);
-
       const petData = petResponse.data;
       setPet(petData);
-
-      const usersData = usersResponse.data;
-      const owner = usersData.find(user => user.id === petData.ownerId);
-      console.log('Owner:', owner);
-      setOwner(owner.name);
-
-      const allVisits = visitsResponse.data;
+  
+      const allVisitsResponse = await axios.get('http://localhost:4000/visits', { headers: { Authorization: `Bearer ${accessToken}` } });
+      console.log('Visits Response:', allVisitsResponse.data);
+      const allVisits = allVisitsResponse.data;
       setVisits(allVisits);
-
+  
       const petVisits = allVisits.filter(visit => visit.petId.toString() === petId);
       setPetVisits(petVisits.sort((a, b) => new Date(b.date) - new Date(a.date)));
-
+  
       const userType = location.state ? location.state.userType : '';
-      setIsDoctor(userType === 'doctor');
+      setIsDoctor(userType === 'doctor' || userType === ''); // If userType is not available, assume the user is not a doctor
+  
+      // Fetch user information only if the user is a doctor
+      if (userType === 'doctor') {
+        const usersResponse = await axios.get(`http://localhost:4000/users`, { headers: { Authorization: `Bearer ${accessToken}` } });
+        console.log('Users Response:', usersResponse.data);
+        const usersData = usersResponse.data;
+        const owner = usersData.find(user => user.id === petData.ownerId);
+        console.log('Owner:', owner);
+        setOwner(owner.name);
+      }
+  
       setLoading(false);
     } catch (error) {
       console.error('Error fetching pet details:', error);
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchPetDetails();
@@ -96,7 +97,9 @@ const PetDetails = () => {
       <p>Type: {pet.petType}</p>
       <p>Status: {pet.status}</p>
       <p>DoB: {pet.dob}</p>
-      <p>Owner: {owner}</p> {/* Display owner's name */}
+      {isDoctor && (
+      <p>Owner: {owner}</p>
+      )}
       <h3>Visits</h3>
       <ul>
         {petVisits.map(visit => (
